@@ -31,37 +31,54 @@ export const loginUser = async (req, res) => {
     // 1. Get login details from the request body
     const { email, password, role } = req.body;
 
-    // 2. Make sure they provided both details
+    // 2. Validate required fields
     if (!email || !password || !role) {
       return res.status(400).json({ message: "Please provide email, password, and login role" });
     }
 
-    // 3. Call the service to log in the user (retrieves user based on email/password)
+    // ── Role normalisation ────────────────────────────────────────────────────
+    // The frontend sends "user" or "busUploader".
+    // The DB stores "user" or "busUploader" (see User model enum).
+    // Accepted frontend values → DB values:
+    const ROLE_MAP = {
+      'user':        'user',
+      'busUploader': 'busUploader',
+      // legacy alias sent by older UIs — kept for safety
+      'uploader':    'busUploader',
+    };
+    const dbRole = ROLE_MAP[role];
+    if (!dbRole) {
+      return res.status(400).json({ message: "Invalid role specified" });
+    }
+    // ─────────────────────────────────────────────────────────────────────────
+
+    // 3. Validate email + password (service throws INVALID_CREDENTIALS if wrong)
     const user = await authService.loginUser(email, password);
-    
-    // --- ROLE VALIDATION ---
-    // 4. Check if the user's role matches the selected role during login
-    if (user.role !== role) {
-        return res.status(403).json({ 
-            message: "Incorrect login type. Please login with the correct role." 
-        });
+
+    // 4. Role check — after credentials are confirmed valid
+    //    This is the ONLY place a 403 should be produced.
+    if (user.role !== dbRole) {
+      return res.status(403).json({ message: "Incorrect login type" });
     }
 
-    // 5. Create a JWT token for the user
+    // 5. Issue JWT
     const token = jwt.sign(
-      { userId: user._id, role: user.role }, 
-      process.env.JWT_SECRET, 
-      { expiresIn: '7d' } 
+      { userId: user._id, role: user.role },
+      process.env.JWT_SECRET,
+      { expiresIn: '7d' }
     );
 
-    // 6. Respond back to the client with the token and user details
-    res.status(200).json({ 
-      message: "Login successful", 
-      token: token,
-      user: { id: user._id, username: user.username, email: user.email, role: user.role } 
+    // 6. Success
+    return res.status(200).json({
+      message: "Login successful",
+      token,
+      user: { id: user._id, username: user.username, email: user.email, role: user.role }
     });
+
   } catch (error) {
-    // Return unauthorized status if login fails
-    res.status(401).json({ message: error.message });
+    // Only credential errors reach here (code === 'INVALID_CREDENTIALS')
+    // Everything else (DB outage etc.) also surfaces here as 401 which is fine
+    // for security (don't leak server internals).
+    return res.status(401).json({ message: "Invalid email or password" });
   }
 };

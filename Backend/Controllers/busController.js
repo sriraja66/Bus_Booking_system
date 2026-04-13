@@ -3,60 +3,82 @@ import * as busService from "../services/busService.js";
 
 // CREATE BUS
 export const createBus = async (req, res) => {
-
   try {
+    // 1. Log the incoming data to see what the frontend is sending
+    console.log("--- New Bus Request ---");
+    console.log("Request Body:", JSON.stringify(req.body, null, 2));
 
     const busData = req.body;
+    
+    // 2. Simple validation for beginners
+    if (!busData.seatType) {
+      return res.status(400).json({ message: "Please select a seat type (Sleeper or Seater)" });
+    }
+    if (!busData.totalSeats || busData.totalSeats <= 0) {
+      return res.status(400).json({ message: "Please enter a valid number of seats" });
+    }
 
+    // 3. Call the service to create the bus
     const newBus = await busService.createBus(busData);
     
+    console.log("✅ Bus successfully saved to database");
 
-    res.status(201).json(newBus);
-
+    res.status(201).json({ 
+      message: "Bus added successfully", 
+      bus: newBus 
+    });
   } catch (error) {
+    // 3. Log the full error in the terminal for debugging
+    console.error("❌ Error in createBus Controller:");
+    console.error(error);
 
-    res.status(500).json({ message: "Error creating bus", error: error.message });
-
+    // 4. Return the specific error message to the frontend
+    res.status(500).json({ 
+      message: error.message || "Failed to create bus" 
+    });
   }
-
 };
 
+
+// GET ALL BUSES
+export const getAllBuses = async (req, res) => {
+  try {
+    const buses = await busService.getAllBuses();
+    
+    // Exactly as requested: Verify GET API
+    console.log("FETCHED BUSES:", buses);
+
+    res.json(buses);
+  } catch (error) {
+    res.status(500).json({ message: "Error getting buses", error: error.message });
+  }
+};
 
 
 // SEARCH BUSES
 export const searchBuses = async (req, res) => {
   try {
-    const { startingLocation, destination } = req.query;
+    const from = (req.query.from || "").trim();
+    const to   = (req.query.to   || "").trim();
 
-    // Use a case-insensitive regex for searching location string
-    const filter = {};
-    if (startingLocation) filter.startingLocation = new RegExp(startingLocation, 'i');
-    if (destination) filter.destination = new RegExp(destination, 'i');
+    console.log("FROM:", `"${from}"`);
+    console.log("TO:", `"${to}"`);
 
-    const buses = await busService.searchBusesService(filter);
+    if (!from || !to) {
+      return res.status(400).json({ message: "Please provide both from and to locations" });
+    }
+
+    const buses = await busService.searchBusesService({
+      startingLocation: { $regex: `^${from}$`, $options: "i" },
+      destination:      { $regex: `^${to}$`,   $options: "i" },
+    });
+
+    console.log("RESULT count:", buses.length);
     res.json(buses);
   } catch (error) {
+    console.error("[Search] Error:", error.message);
     res.status(500).json({ message: "Error searching buses", error: error.message });
   }
-};
-
-
-
-// GET ALL BUSES
-export const getAllBuses = async (req, res) => {
-
-  try {
-
-    const buses = await busService.getAllBuses();
-
-    res.json(buses);
-
-  } catch (error) {
-
-    res.status(500).json({ message: "Error getting buses", error: error.message });
-
-  }
-
 };
 
 

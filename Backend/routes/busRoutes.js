@@ -6,7 +6,7 @@ import {
   updateBus,
   deleteBus,
   searchBuses
-} from '../controllers/busController.js';
+} from '../Controllers/busController.js';
 
 const router = express.Router();
 
@@ -15,8 +15,10 @@ router.route('/search')
   .get(searchBuses);
 
 // Routes for /api/buses
+router.post('/add-bus', createBus);
+
 router.route('/')
-  .post(createBus)
+  .post(createBus) // Keep this for existing apiService compatibility
   .get(getAllBuses);
 
 // Routes for /api/buses/:id

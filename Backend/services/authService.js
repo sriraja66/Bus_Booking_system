@@ -31,23 +31,25 @@ export const registerUser = async (userData) => {
   }
 };
 
-// Login an existing user
+// Login an existing user — only validates email & password.
+// Role checking is handled by the controller.
 export const loginUser = async (email, password) => {
-  try {
-    // 1. Find user by email
-    const user = await User.findOne({ email });
-    if (!user) {
-      throw new Error("User not found");
-    }
-
-    // 2. Check if the password matches using bcrypt.compare()
-    const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch) {
-      throw new Error("Invalid password");
-    }
-
-    return user; // Successfully logged in
-  } catch (error) {
-    throw error;
+  // 1. Find user by email
+  const user = await User.findOne({ email });
+  if (!user) {
+    // Use a tagged error so the controller knows this is a credentials failure
+    const err = new Error("Invalid email or password");
+    err.code = "INVALID_CREDENTIALS";
+    throw err;
   }
+
+  // 2. Check if the password matches
+  const isMatch = await bcrypt.compare(password, user.password);
+  if (!isMatch) {
+    const err = new Error("Invalid email or password");
+    err.code = "INVALID_CREDENTIALS";
+    throw err;
+  }
+
+  return user; // Return the full user document; caller decides role logic
 };

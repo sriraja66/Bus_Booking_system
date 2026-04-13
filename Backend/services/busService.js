@@ -3,13 +3,30 @@ import Bus from "../models/Bus.js";
 
 // CREATE BUS
 export const createBus = async (busData) => {
+  // 1. Validate totalSeats to ensure it is a positive number
+  const totalSeats = Number(busData.totalSeats);
+  
+  if (!totalSeats || totalSeats <= 0) {
+    throw new Error("Invalid totalSeats. Please provide a positive number greater than 0.");
+  }
 
-  const bus = new Bus(busData);
+  // 2. Automatically generate seats array
+  const generatedSeats = [];
+  for (let i = 1; i <= totalSeats; i++) {
+    generatedSeats.push({
+      number: i,
+      isBooked: false
+    });
+  }
+
+  // 3. Create and save the bus
+  const bus = new Bus({
+    ...busData,
+    seats: generatedSeats
+  });
 
   const savedBus = await bus.save();
-
   return savedBus;
-
 };
 
 
