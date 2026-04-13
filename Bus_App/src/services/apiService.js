@@ -3,6 +3,8 @@
  * This ensures consistent handling of the base URL and authentication tokens.
  */
 
+// Both locally (Vite proxy) and on Vercel (same domain), /api always works.
+// VITE_API_URL can override this for special deployments (e.g. separate backend host).
 const API_BASE_URL = import.meta.env.VITE_API_URL || '/api';
 
 /**
