@@ -7,14 +7,20 @@ import busRoutes from "./routes/busRoutes.js";
 import authRoutes from "./routes/authRoutes.js";
 import bookingRoutes from "./routes/bookingRoutes.js";
 
-dotenv.config();
+// ✅ Load .env ONLY for local
+if (!process.env.VERCEL) {
+  dotenv.config();
+}
 
 const app = express();
 
+// ✅ DEBUG (remove later)
+console.log("MONGO_URL:", process.env.MONGO_URL);
+
 // --- CORS ---
 const allowedOrigins = process.env.ALLOWED_ORIGINS
-  ? process.env.ALLOWED_ORIGINS.split(',').map(o => o.trim())
-  : ['http://localhost:5173', 'http://localhost:3000'];
+  ? process.env.ALLOWED_ORIGINS.split(",").map(o => o.trim())
+  : ["http://localhost:5173", "http://localhost:3000"];
 
 app.use(cors({
   origin: function (origin, callback) {
@@ -34,28 +40,27 @@ let isConnected = false;
 const connectDB = async () => {
   if (isConnected) return;
 
-  try {
-    if (!process.env.MONGO_URL) {
-      throw new Error("MONGO_URL not found");
-    }
+  if (!process.env.MONGO_URL) {
+    throw new Error("MONGO_URL not found");
+  }
 
+  try {
     const conn = await mongoose.connect(process.env.MONGO_URL);
     isConnected = true;
-
-    console.log("MongoDB Connected:", conn.connection.host);
+    console.log("✅ MongoDB Connected:", conn.connection.host);
   } catch (error) {
-    console.error("MongoDB connection error:", error.message);
-    // ❌ DO NOT crash server in Vercel
-    return;
+    console.error("❌ MongoDB ERROR:", error);
+    throw error; // ✅ VERY IMPORTANT
   }
 };
 
-// --- ENSURE DB CONNECTION BEFORE API ---
+// --- ENSURE DB BEFORE API ---
 app.use("/api", async (req, res, next) => {
   try {
     await connectDB();
     next();
   } catch (err) {
+    console.error("DB FAILED:", err);
     return res.status(500).json({ error: "Database connection failed" });
   }
 });
@@ -65,15 +70,15 @@ app.use("/api/buses", busRoutes);
 app.use("/api/auth", authRoutes);
 app.use("/api/bookings", bookingRoutes);
 
-// --- HEALTH CHECK ---
+// --- HEALTH ---
 app.get("/api/health", (req, res) => {
-  res.json({ status: "ok", env: process.env.NODE_ENV || "unset" });
+  res.json({ status: "ok" });
 });
 
-// --- EXPORT FOR VERCEL ---
+// --- EXPORT ---
 export default app;
 
-// --- LOCAL DEVELOPMENT ONLY ---
+// --- LOCAL ONLY ---
 if (!process.env.VERCEL) {
   const PORT = process.env.PORT || 5005;
 
