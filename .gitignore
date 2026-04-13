@@ -26,3 +26,4 @@ dist-ssr
 .env
 .env.*
 Bus_App/.env
+Bus_App/.env.production
