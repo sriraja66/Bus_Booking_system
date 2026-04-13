@@ -64,6 +64,11 @@ app.use("/api", async (req, res, next) => {
   }
 });
 
+// --- ROOT ROUTE ---
+app.get("/", (req, res) => {
+  res.send("API is running 🚀");
+});
+
 // --- API ROUTES ---
 app.use("/api/buses", busRoutes);
 app.use("/api/auth", authRoutes);
