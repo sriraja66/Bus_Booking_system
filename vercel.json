@@ -1,5 +1,6 @@
 {
   "version": 2,
+<<<<<<< HEAD
   "builds": [
     {
       "src": "Bus_App/package.json",
@@ -17,3 +18,16 @@
     { "src": "/(.*)", "dest": "/index.html" }
   ]
 }
+=======
+  "rewrites": [
+    {
+      "source": "/api/(.*)",
+      "destination": "/api/index.js"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/Bus_App/dist/index.html"
+    }
+  ]
+}
+>>>>>>> 49a6919 (deploy)
