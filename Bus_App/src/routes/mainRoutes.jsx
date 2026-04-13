@@ -10,6 +10,7 @@ import BusList from "../pages/BusList";
 import SeatBookingPage from "../pages/SeatBookingPage";
 import SearchResults from "../pages/SearchResults";
 import MyBookings from "../pages/MyBookings";
+import TicketPage from "../pages/TicketPage";
 import NotFound from "../pages/NotFound";
 import ProtectedRoute from "../components/ProtectedRoute";
 
@@ -64,6 +65,14 @@ const mainRoutes = {
       element: (
         <ProtectedRoute allowedRoles={["user"]}>
           <SeatBookingPage />
+        </ProtectedRoute>
+      ),
+    },
+    {
+      path: "ticket/:bookingId",
+      element: (
+        <ProtectedRoute allowedRoles={["user"]}>
+          <TicketPage />
         </ProtectedRoute>
       ),
     },

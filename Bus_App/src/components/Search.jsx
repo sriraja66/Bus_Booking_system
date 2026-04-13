@@ -8,8 +8,12 @@ function SearchBox() {
   const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
 
   const handleSearch = () => {
-    if (from && to) {
-      navigate(`/search-results?from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}&date=${encodeURIComponent(date)}`);
+    // Trim values before processing
+    const cleanFrom = from.trim();
+    const cleanTo = to.trim();
+
+    if (cleanFrom && cleanTo) {
+      navigate(`/search-results?from=${encodeURIComponent(cleanFrom)}&to=${encodeURIComponent(cleanTo)}&date=${encodeURIComponent(date)}`);
     } else {
       alert("Please enter both 'From' and 'To' cities.");
     }
@@ -53,7 +57,7 @@ function SearchBox() {
             onFocus={(e) => e.target.style.borderColor = '#3b82f6'}
             onBlur={(e) => e.target.style.borderColor = '#e2e8f0'}
             value={from}
-            onChange={(e) => setFrom(e.target.value)}
+            onChange={(e) => setFrom(e.target.value.trimStart())}
           />
         </div>
       </div>
@@ -80,7 +84,7 @@ function SearchBox() {
             onFocus={(e) => e.target.style.borderColor = '#3b82f6'}
             onBlur={(e) => e.target.style.borderColor = '#e2e8f0'}
             value={to}
-            onChange={(e) => setTo(e.target.value)}
+            onChange={(e) => setTo(e.target.value.trimStart())}
           />
         </div>
       </div>
@@ -122,10 +126,10 @@ function SearchBox() {
           alignItems: 'center',
           gap: '10px'
         }}
-        onMouseOver={(e) => { e.target.style.background = '#1d4ed8'; e.target.style.transform = 'translateY(-2px)'; }}
-        onMouseOut={(e) => { e.target.style.background = '#2563eb'; e.target.style.transform = 'translateY(0)'; }}
+        onMouseOver={(e) => { e.currentTarget.style.background = '#1d4ed8'; e.currentTarget.style.transform = 'translateY(-2px)'; }}
+        onMouseOut={(e) => { e.currentTarget.style.background = '#2563eb'; e.currentTarget.style.transform = 'translateY(0)'; }}
       >
-        Search Flights 🔍
+        🚌 Search Buses
       </button>
     </div>
   );

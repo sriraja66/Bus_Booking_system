@@ -6,7 +6,8 @@ import { useAuth } from "../context/AuthContext";
 function LoginForm() {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
-    const [loginRole, setLoginRole] = useState("user"); // "user" or "uploader" (DB roles)
+    // Values match the DB enum exactly: 'user' | 'busUploader'
+    const [loginRole, setLoginRole] = useState("user");
     const [error, setError] = useState("");
     const [loading, setLoading] = useState(false);
     const navigate = useNavigate();
@@ -18,25 +19,27 @@ function LoginForm() {
         setLoading(true);
 
         try {
-            // Map UI role to the DB-native role before sending to backend
-            const dbRole = loginRole === "busUploader" ? "uploader" : loginRole;
-            const data = await apiService.login({ email, password, role: dbRole });
-            
-            // Log in via AuthContext (stores user/token in storage and state)
+            // Send the role exactly as stored in the DB ('user' or 'busUploader')
+            const data = await apiService.login({ email, password, role: loginRole });
+
+            // Store user + token via AuthContext
             login(data.user, data.token);
 
-            console.log("Login successful:", data.user?.username || data.user?.name);
-            
-            // Redirect based on the normalized role (AuthContext maps 'uploader' -> 'busUploader')
-            const normalizedRole = data.user.role === 'uploader' ? 'busUploader' : data.user.role;
-            if (normalizedRole === 'busUploader') {
+            // Redirect based on the role that came back from the server
+            if (data.user.role === 'busUploader') {
                 navigate('/uploader/dashboard');
             } else {
                 navigate('/dashboard');
             }
         } catch (err) {
-            // The backend returns a 403 for role mismatches
-            setError(err.message || "Invalid credentials");
+            // err.status is set by apiService — show the right message per status
+            if (err.status === 403) {
+                setError("Incorrect login type. Please login with the correct role.");
+            } else if (err.status === 401) {
+                setError("Invalid email or password.");
+            } else {
+                setError(err.message || "Something went wrong. Please try again.");
+            }
         } finally {
             setLoading(false);
         }
@@ -57,8 +60,8 @@ function LoginForm() {
                 </button>
                 <button
                     type="button"
-                    onClick={() => setLoginRole("uploader")}
-                    className={loginRole === "uploader" ? "search-btn" : "booking-btn"}
+                    onClick={() => setLoginRole("busUploader")}
+                    className={loginRole === "busUploader" ? "search-btn" : "booking-btn"}
                     style={{ flex: 1, padding: '10px', fontSize: '14px' }}
                 >
                     Login as Bus Uploader
@@ -108,7 +111,7 @@ function LoginForm() {
                     style={{ width: "100%", padding: '12px' }}
                     disabled={loading}
                 >
-                    {loading ? "Authenticating..." : `Login as ${loginRole === 'user' ? 'User' : 'Uploader'}`}
+                    {loading ? "Authenticating..." : `Login as ${loginRole === 'busUploader' ? 'Bus Uploader' : 'User'}`}
                 </button>
             </form>
 

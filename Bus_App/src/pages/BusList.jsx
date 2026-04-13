@@ -16,7 +16,10 @@ const BusList = () => {
             console.log("Fetching buses...");
             try {
                 const data = await apiService.getAllBuses();
-                console.log("Fetched buses count:", data.length);
+                
+                // Exactly as requested: Verify frontend fetch
+                console.log("Fetched:", data);
+
                 setBuses(data);
             } catch (err) {
                 console.error("Error fetching buses:", err);
@@ -95,7 +98,7 @@ const BusList = () => {
                                 </div>
 
                                 <div className="extra-info">
-                                    <span>💺 {Number(bus.seaterSeats || 0) + Number(bus.sleeperSeats || 0)} Seats</span>
+                                    <span>💺 {bus.totalSeats || 0} {bus.seatType} Seats</span>
                                     <span className="price">₹{bus.ticketPrice}</span>
                                 </div>
 

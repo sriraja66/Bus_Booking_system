@@ -54,13 +54,19 @@ function Navbar() {
               <button 
                 onClick={handleLogout}
                 style={{ 
-                  padding: '5px 12px', 
-                  borderRadius: '4px', 
-                  border: '1px solid #d1d5db',
-                  background: 'none',
+                  padding: '6px 16px', 
+                  borderRadius: '6px', 
+                  border: 'none',
+                  background: '#ef4444',
+                  color: '#ffffff',
                   cursor: 'pointer',
-                  fontSize: '13px'
+                  fontSize: '13px',
+                  fontWeight: '700',
+                  letterSpacing: '0.3px',
+                  transition: 'background 0.2s'
                 }}
+                onMouseOver={(e) => e.currentTarget.style.background = '#dc2626'}
+                onMouseOut={(e) => e.currentTarget.style.background = '#ef4444'}
               >
                 Logout
               </button>

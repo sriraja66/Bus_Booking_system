@@ -44,7 +44,12 @@ export const apiService = {
       body: JSON.stringify(credentials),
     });
     const data = await response.json();
-    if (!response.ok) throw new Error(data.message || 'Login failed');
+    if (!response.ok) {
+      // Attach status so the caller can show the right message
+      const err = new Error(data.message || 'Login failed');
+      err.status = response.status;
+      throw err;
+    }
     return data;
   },
 
@@ -72,7 +77,13 @@ export const apiService = {
 
   // Search for buses
   searchBuses: async (from, to) => {
-    const url = `${API_BASE_URL}/buses/search?startingLocation=${encodeURIComponent(from)}&destination=${encodeURIComponent(to)}`;
+    // Trim to eliminate accidental spaces from URL params
+    const cleanFrom = (from || "").trim();
+    const cleanTo   = (to   || "").trim();
+
+    console.log("[apiService.searchBuses] from:", cleanFrom, "| to:", cleanTo);
+
+    const url = `${API_BASE_URL}/buses/search?from=${encodeURIComponent(cleanFrom)}&to=${encodeURIComponent(cleanTo)}`;
     const response = await fetch(url);
     const data = await response.json();
     if (!response.ok) throw new Error(data.message || 'Failed to fetch buses');
@@ -100,6 +111,16 @@ export const apiService = {
     });
     const data = await response.json();
     if (!response.ok) throw new Error(data.message || 'Failed to fetch bookings');
+    return data;
+  },
+
+  // Get a single booking by custom bookingId (for Ticket page)
+  getBookingByBookingId: async (bookingId) => {
+    const response = await fetch(`${API_BASE_URL}/bookings/ticket/${bookingId}`, {
+      headers: getHeaders(),
+    });
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.message || 'Failed to fetch ticket');
     return data;
   }
 };

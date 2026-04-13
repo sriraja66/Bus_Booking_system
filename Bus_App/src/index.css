@@ -2,8 +2,18 @@
   font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.5;
   font-weight: 400;
+  /* Force light mode — prevents browser dark-mode from making inputs white-on-white */
+  color-scheme: light;
+}
 
-  color-scheme: light dark;
+/* Global input fix — ensure typed text is always visible */
+input, textarea, select {
+  color: #1a1a2e;
+  background-color: #ffffff;
+}
+
+input::placeholder, textarea::placeholder {
+  color: #9ca3af;
 }
 
 a {
