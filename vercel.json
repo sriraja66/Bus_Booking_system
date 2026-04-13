@@ -2,18 +2,26 @@
   "version": 2,
   "builds": [
     {
+      "src": "api/index.js",
+      "use": "@vercel/node"
+    },
+    {
       "src": "Bus_App/package.json",
       "use": "@vercel/static-build",
       "config": { "distDir": "dist" }
-    },
-    {
-      "src": "api/index.js",
-      "use": "@vercel/node"
     }
   ],
   "routes": [
-    { "src": "/api/(.*)", "dest": "/api/index.js" },
-    { "handle": "filesystem" },
-    { "src": "/(.*)", "dest": "/index.html" }
+    {
+      "src": "/api/(.*)",
+      "dest": "/api/index.js"
+    },
+    {
+      "handle": "filesystem"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/Bus_App/dist/index.html"
+    }
   ]
 }
