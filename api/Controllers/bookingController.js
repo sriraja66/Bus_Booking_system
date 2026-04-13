@@ -92,3 +92,13 @@ export const getUserBookings = async (req, res) => {
     res.status(500).json({ message: 'Failed to fetch bookings', error: error.message });
   }
 };
+
+// GET ALL BOOKINGS (GLOBAL)
+export const getAllBookings = async (req, res) => {
+  try {
+    const bookings = await Booking.find().populate('userId', 'name email').populate('busId');
+    res.status(200).json(bookings);
+  } catch (error) {
+    res.status(500).json({ message: 'Failed to fetch all bookings', error: error.message });
+  }
+};
