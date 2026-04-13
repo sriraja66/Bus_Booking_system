@@ -12,16 +12,12 @@ dotenv.config();
 const app = express();
 
 // --- CORS ---
-// In production (Vercel), frontend and backend share the same domain,
-// so CORS is only relevant for external/local access.
-// ALLOWED_ORIGINS env var lets you add extra origins (e.g. localhost during dev).
 const allowedOrigins = process.env.ALLOWED_ORIGINS
   ? process.env.ALLOWED_ORIGINS.split(',').map(o => o.trim())
   : ['http://localhost:5173', 'http://localhost:3000'];
 
 app.use(cors({
   origin: function (origin, callback) {
-    // Allow same-origin requests (no Origin header) and allowlisted origins
     if (!origin) return callback(null, true);
     if (allowedOrigins.includes(origin)) return callback(null, true);
     return callback(new Error(`CORS blocked for origin: ${origin}`));
@@ -33,48 +29,54 @@ app.use(cors({
 app.use(express.json());
 
 // --- DATABASE ---
-// Cache the connection across serverless warm invocations to avoid
-// reconnecting on every function call (standard serverless DB pattern).
 let isConnected = false;
 
 const connectDB = async () => {
   if (isConnected) return;
+
   try {
     if (!process.env.MONGO_URL) {
-      throw new Error("MONGO_URL not found in environment variables");
+      throw new Error("MONGO_URL not found");
     }
+
     const conn = await mongoose.connect(process.env.MONGO_URL);
     isConnected = true;
+
     console.log("MongoDB Connected:", conn.connection.host);
   } catch (error) {
     console.error("MongoDB connection error:", error.message);
-    throw error
+    // ❌ DO NOT crash server in Vercel
+    return;
   }
 };
 
-// --- API ROUTES ---
-// Middleware: ensure DB is connected before every API request
+// --- ENSURE DB CONNECTION BEFORE API ---
 app.use("/api", async (req, res, next) => {
-  await connectDB();
-  next();
+  try {
+    await connectDB();
+    next();
+  } catch (err) {
+    return res.status(500).json({ error: "Database connection failed" });
+  }
 });
 
+// --- ROUTES ---
 app.use("/api/buses", busRoutes);
 app.use("/api/auth", authRoutes);
 app.use("/api/bookings", bookingRoutes);
 
-// Health check endpoint
+// --- HEALTH CHECK ---
 app.get("/api/health", (req, res) => {
   res.json({ status: "ok", env: process.env.NODE_ENV || "unset" });
 });
 
-// --- EXPORT for Vercel Serverless ---
+// --- EXPORT FOR VERCEL ---
 export default app;
 
-// --- LOCAL DEV: start the server only outside Vercel ---
-// process.env.VERCEL is automatically set to "1" inside Vercel's runtime.
+// --- LOCAL DEVELOPMENT ONLY ---
 if (!process.env.VERCEL) {
   const PORT = process.env.PORT || 5005;
+
   connectDB().then(() => {
     app.listen(PORT, () => {
       console.log(`Server running on port ${PORT}`);
