@@ -3,10 +3,9 @@ import mongoose from "mongoose";
 import cors from "cors";
 import dotenv from "dotenv";
 
-import busRoutes from "./routes/busRoutes.js";
-import authRoutes from "./routes/authRoutes.js";
-import bookingRoutes from "./routes/bookingRoutes.js";
-
+import busRoutes from "../api/routes/busRoutes.js";
+import authRoutes from "../api/routes/authRoutes.js";
+import bookingRoutes from "../api/routes/bookingRoutes.js";
 // ✅ Load .env ONLY for local
 if (!process.env.VERCEL) {
   dotenv.config();
